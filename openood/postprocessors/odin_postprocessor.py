@@ -6,7 +6,6 @@ import torch.nn as nn
 
 from .base_postprocessor import BasePostprocessor
 
-
 class ODINPostprocessor(BasePostprocessor):
     def __init__(self, config):
         super().__init__(config)
@@ -18,6 +17,7 @@ class ODINPostprocessor(BasePostprocessor):
 
     def postprocess(self, net: nn.Module, data: Any):
         data.requires_grad = True
+
         output = net(data)
 
         # Calculating the perturbation we need to add, that is,

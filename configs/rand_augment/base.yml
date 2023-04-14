@@ -1,0 +1,7 @@
+rand_augment:
+  name: base
+  augmentation: True
+  rand_n: 1
+  rand_m: 5
+  num_augments: 10
+  averaging_before_max: True

@@ -5,11 +5,15 @@ from torch.utils.data import DataLoader
 from openood.preprocessors.test_preprocessor import TestStandardPreProcessor
 from openood.preprocessors.utils import get_preprocessor
 from openood.utils.config import Config
+from imgaug import augmenters as iaa
+import imgaug as ia
 
 from .feature_dataset import FeatDataset
 from .imglist_dataset import ImglistDataset
 from .udg_dataset import UDGDataset
 
+RAND_N=3
+RAND_M=5
 
 def get_dataloader(config: Config):
     # prepare a dataloader dictionary
@@ -59,7 +63,8 @@ def get_ood_dataloader(config: Config):
                 data_dir=split_config.data_dir,
                 num_classes=ood_config.num_classes,
                 preprocessor=preprocessor,
-                data_aux_preprocessor=data_aux_preprocessor)
+                data_aux_preprocessor=data_aux_preprocessor,)
+                #transform=augment_preprocess)
             dataloader = DataLoader(dataset,
                                     batch_size=ood_config.batch_size,
                                     shuffle=ood_config.shuffle,
@@ -77,6 +82,53 @@ def get_ood_dataloader(config: Config):
                     num_classes=ood_config.num_classes,
                     preprocessor=preprocessor,
                     data_aux_preprocessor=data_aux_preprocessor)
+                    #transform=augment_preprocess)
+                dataloader = DataLoader(dataset,
+                                        batch_size=ood_config.batch_size,
+                                        shuffle=ood_config.shuffle,
+                                        num_workers=ood_config.num_workers)
+                sub_dataloader_dict[dataset_name] = dataloader
+            dataloader_dict[split] = sub_dataloader_dict
+
+    return dataloader_dict
+
+def get_ood_nbor_dataloader(config: Config):
+    # specify custom dataset class
+    ood_config = config.ood_dataset
+    CustomDataset = eval(ood_config.dataset_class)
+    dataloader_dict = {}
+    for split in ood_config.split_names:
+        split_config = ood_config[split]
+        preprocessor = get_preprocessor(config, split)
+        data_aux_preprocessor = TestStandardPreProcessor(config)
+        if split == 'val':
+            # validation set
+            dataset = CustomDataset(
+                name=ood_config.name + '_' + split,
+                imglist_pth=split_config.imglist_pth,
+                data_dir=split_config.data_dir,
+                num_classes=ood_config.num_classes,
+                preprocessor=preprocessor,
+                data_aux_preprocessor=data_aux_preprocessor,
+                transform=augment_preprocess)
+            dataloader = DataLoader(dataset,
+                                    batch_size=ood_config.batch_size,
+                                    shuffle=ood_config.shuffle,
+                                    num_workers=ood_config.num_workers)
+            dataloader_dict[split] = dataloader
+        else:
+            # dataloaders for csid, nearood, farood
+            sub_dataloader_dict = {}
+            for dataset_name in split_config.datasets:
+                dataset_config = split_config[dataset_name]
+                dataset = CustomDataset(
+                    name=ood_config.name + '_' + split,
+                    imglist_pth=dataset_config.imglist_pth,
+                    data_dir=dataset_config.data_dir,
+                    num_classes=ood_config.num_classes,
+                    preprocessor=preprocessor,
+                    data_aux_preprocessor=data_aux_preprocessor)
+                    #transform=augment_preprocess)
                 dataloader = DataLoader(dataset,
                                         batch_size=ood_config.batch_size,
                                         shuffle=ood_config.shuffle,
@@ -107,3 +159,8 @@ def get_feature_dataloader(dataset_config: Config):
                             num_workers=dataset_config.num_workers)
 
     return dataloader
+
+def augment_preprocess(im):
+    rand_aug = iaa.RandAugment(n=RAND_N, m=RAND_M)
+    #im = preprocess(im)
+    return rand_aug(images=im)

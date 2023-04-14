@@ -5,6 +5,7 @@ from .cutpaste_preprocessor import CutPastePreprocessor
 from .draem_preprocessor import DRAEMPreprocessor
 from .pixmix_preprocessor import PixMixPreprocessor
 from .test_preprocessor import TestStandardPreProcessor
+from .manifold_preprocessor import ManifoldPreprocessor
 
 
 def get_preprocessor(config: Config, split):
@@ -18,9 +19,10 @@ def get_preprocessor(config: Config, split):
         'base': TestStandardPreProcessor,
         'draem': DRAEMPreprocessor,
         'cutpaste': CutPastePreprocessor,
+        'manifold': ManifoldPreprocessor
     }
 
     if split == 'train':
-        return train_preprocessors[config.preprocessor.name](config)
+        return train_preprocessors['base'](config)
     else:
         return test_preprocessors[config.preprocessor.name](config)

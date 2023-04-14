@@ -3,4 +3,5 @@ from .cutpaste_preprocessor import CutPastePreprocessor
 from .draem_preprocessor import DRAEMPreprocessor
 from .pixmix_preprocessor import PixMixPreprocessor
 from .test_preprocessor import TestStandardPreProcessor
+from .manifold_preprocessor import ManifoldPreprocessor
 from .utils import get_preprocessor

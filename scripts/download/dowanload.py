@@ -58,7 +58,7 @@ download_id_dict = {
     'cifar10': '1Co32RiiWe16lTaiOU6JMMnyUYS41IlO1',
     'cifar10c': '170DU_ficWWmbh6O2wqELxK9jxRiGhlJH',
     'cinic10': '190gdcfbvSGbrRK6ZVlJgg5BqqED6H_nn',
-    'svhn': '1DQfc11HOtB1nEwqS4pWUFp8vtQ3DczvI',
+    #'svhn': '1DQfc11HOtB1nEwqS4pWUFp8vtQ3DczvI',
     'fashionmnist': '1nVObxjUBmVpZ6M0PPlcspsMMYHidUMfa',
     'cifar100c': '1MnETiQh9RTxJin2EHeSoIAJA28FRonHx',
     'mnist': '1CCHAGWqA1KJTFFswuF9cbhmB-j98Y1Sb',
@@ -110,7 +110,7 @@ def download_dataset(dataset, args):
         if not store_path.endswith('/'):
             store_path = store_path + '/'
         gdown.download(id=download_id_dict[dataset], output=store_path)
-
+        print("store_path", store_path)
         file_path = os.path.join(store_path, dataset + '.zip')
         with zipfile.ZipFile(file_path, 'r') as zip_file:
             zip_file.extractall(store_path)
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.datasets[0] == 'default':
-        args.datasets = ['mnist', 'cifar-10', 'cifar-100']
+        args.datasets = [ 'cifar-10', 'cifar-100']
     elif args.datasets[0] == 'all':
         args.datasets = list(benchmarks_dict.keys())
 
@@ -161,10 +161,22 @@ if __name__ == '__main__':
                 with zipfile.ZipFile(file_path, 'r') as zip_file:
                     zip_file.extractall(store_path)
                 os.remove(file_path)
+            
+            # if not os.path.exists(os.path.join(store_path,
+            #                                    'images_largescale')):
+            #     gdown.download(id=download_id_dict['images_largescale'],
+            #                    output=store_path)
+            #     file_path = os.path.join(args.save_dir[0],
+            #                              'images_largescale.zip')
+            #     with zipfile.ZipFile(file_path, 'r') as zip_file:
+            #         zip_file.extractall(store_path)
+            #     os.remove(file_path)
 
             if args.dataset_mode == 'default' or args.dataset_mode == 'benchmark':
                 for benchmark in args.datasets:
                     for dataset in benchmarks_dict[benchmark]:
+                        download_dataset(dataset, args)
+                    for dataset in benchmarks_dict['imagenet_1k']:
                         download_dataset(dataset, args)
 
             if args.dataset_mode == 'dataset':

@@ -1,0 +1,3 @@
+rand_augment:
+  name: no_augmentation
+  augmentation: False

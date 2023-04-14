@@ -1,0 +1,5 @@
+preprocessor:
+  name: manifold
+  preprocessor_args:
+    rand_n: 1
+    rand_m: 5

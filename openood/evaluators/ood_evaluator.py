@@ -70,7 +70,7 @@ class OODEvaluator(BaseEvaluator):
         for dataset_name, ood_dl in ood_data_loaders[ood_split].items():
             print(f'Performing inference on {dataset_name} dataset...',
                   flush=True)
-            ood_pred, ood_conf, ood_gt = postprocessor.inference(net, ood_dl)
+            ood_pred, ood_conf, ood_gt = postprocessor.inference(net, ood_dl, augmentation=self.config.rand_augment.augmentation)
             ood_gt = -1 * np.ones_like(ood_gt)  # hard set to -1 as ood
             if self.config.recorder.save_scores:
                 self._save_scores(ood_pred, ood_conf, ood_gt, dataset_name)
@@ -158,8 +158,7 @@ class OODEvaluator(BaseEvaluator):
             net['backbone'].eval()
         else:
             net.eval()
-        self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(
-            net, data_loader)
+        self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(net, data_loader)
         metrics = {}
         metrics['acc'] = sum(self.id_pred == self.id_gt) / len(self.id_pred)
         metrics['epoch_idx'] = epoch_idx

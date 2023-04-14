@@ -11,6 +11,7 @@ from .base_dataset import BaseDataset
 # to fix "OSError: image file is truncated"
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+PATH="/home/gridsan/nhulkund/OpenOOD/"
 
 class Convert:
     def __init__(self, mode='RGB'):
@@ -62,6 +63,7 @@ class ImglistDataset(BaseDataset):
         if self.data_dir != '' and image_name.startswith('/'):
             raise RuntimeError('image_name starts with "/"')
         path = os.path.join(self.data_dir, image_name)
+        #print(path)
         sample = dict()
         sample['image_name'] = image_name
         kwargs = {'name': self.name, 'path': path, 'tokens': tokens}
