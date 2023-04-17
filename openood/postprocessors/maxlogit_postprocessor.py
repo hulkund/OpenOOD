@@ -26,12 +26,10 @@ class MaxLogitPostprocessor(BasePostprocessor):
             else:
                 raise TypeError
             if self.config.rand_augment.averaging_before_max == True:
+                print("averaging before max!!")
                 output_reshaped = torch.reshape(output, (first_dim, second_dim, output.shape[1]))
-                #print("output after reshaping", output_reshaped.shape)
                 output_averaged = torch.Tensor(torch.mean(output_reshaped,dim=1))
-                #print("output after averaging", output_averaged.shape)
                 conf, pred = torch.max(output_averaged, dim=1)
-                #print("output maxed", pred.shape)
             else:
                 conf, pred = torch.max(output, dim=1)
                 pred_reshaped = pred.numpy().reshape(first_dim,second_dim)

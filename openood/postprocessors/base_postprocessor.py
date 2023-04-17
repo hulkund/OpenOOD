@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from .randaugment_manifold_function import RandAugmentManifold
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
 
 class BasePostprocessor:
     def __init__(self, config):
@@ -17,7 +17,10 @@ class BasePostprocessor:
     def postprocess(self, net: nn.Module, data: Any, augmentation=False):
         output = net(data)
         score = torch.softmax(output, dim=1)
-        conf, pred = torch.max(score, dim=1)
+        if self.config.rand_augment.augmentation and augmentation:
+            conf, pred = postprocess_augmentations(self.config, score)
+        else:
+            conf, pred = torch.max(score, dim=1)
         return pred, conf
 
     def inference(self, net: nn.Module, data_loader: DataLoader, augmentation=False):
@@ -27,6 +30,7 @@ class BasePostprocessor:
             label = batch['label'].cuda()
 
             if self.config.rand_augment.augmentation == True and augmentation:
+                #print("rand aug")
                 aug_data = []
                 aug_label = []
                 #print("augmenting")

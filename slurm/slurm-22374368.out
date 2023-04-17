@@ -1,0 +1,95 @@
+#!/bin/bash
+got config
+got data
+Model Loading resnet18_32x32 Completed!
+got network
+got evaluator, postprocessor
+/state/partition1/llgrid/pkg/anaconda/anaconda3-2022a/lib/python3.8/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: libtorch_cuda_cu.so: cannot open shared object file: No such file or directory
+  warn(f"Failed to load image Python extension: {e}")
+/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/mmcv/cnn/bricks/transformer.py:32: UserWarning: Fail to import ``MultiScaleDeformableAttention`` from ``mmcv.ops.multi_scale_deform_attn``, You should install ``mmcv-full`` if you need this module. 
+  warnings.warn('Fail to import ``MultiScaleDeformableAttention`` from '
+acc metric
+Performing inference on cifar10 dataset...
+Processing nearood...
+Performing inference on cifar100 dataset...
+Computing metrics on cifar100 dataset...
+FPR@95: 32.67, AUROC: 94.69 AUPR_IN: 95.26, AUPR_OUT: 93.26
+CCR: 3.28, 10.92, 53.53, 87.98, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Performing inference on tin dataset...
+Computing metrics on tin dataset...
+FPR@95: 29.49, AUROC: 95.30 AUPR_IN: 96.06, AUPR_OUT: 93.85
+CCR: 3.74, 15.17, 61.77, 88.81, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Computing mean metrics...
+FPR@95: 31.08, AUROC: 94.99 AUPR_IN: 95.66, AUPR_OUT: 93.56
+CCR: 3.51, 13.04, 57.65, 88.39, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Processing farood...
+Performing inference on mnist dataset...
+Computing metrics on mnist dataset...
+FPR@95: 20.57, AUROC: 96.66 AUPR_IN: 91.39, AUPR_OUT: 99.36
+CCR: 17.19, 50.92, 81.00, 91.20, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Performing inference on svhn dataset...
+Computing metrics on svhn dataset...
+FPR@95: 12.44, AUROC: 97.54 AUPR_IN: 96.37, AUPR_OUT: 98.78
+CCR: 22.51, 69.21, 86.18, 91.98, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Performing inference on texture dataset...
+Computing metrics on texture dataset...
+FPR@95: 33.81, AUROC: 94.81 AUPR_IN: 96.87, AUPR_OUT: 89.66
+CCR: 1.53, 6.81, 63.38, 88.16, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Performing inference on place365 dataset...
+Computing metrics on place365 dataset...
+FPR@95: 31.25, AUROC: 95.11 AUPR_IN: 89.18, AUPR_OUT: 98.27
+CCR: 4.61, 21.87, 61.54, 88.17, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+Computing mean metrics...
+FPR@95: 24.52, AUROC: 96.03 AUPR_IN: 93.45, AUPR_OUT: 96.52
+CCR: 11.46, 37.20, 73.02, 89.88, ACC: 95.24
+──────────────────────────────────────────────────────────────────────
+ood metric
+ran metrics
+cifar10 msp base rand_n= 1  rand_m= 11
+Traceback (most recent call last):
+  File "get_ood_metrics.py", line 87, in <module>
+    ood_df.to_csv(PATH+filename)
+  File "/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/pandas/core/generic.py", line 3563, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+  File "/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/pandas/io/formats/format.py", line 1180, in to_csv
+    csv_formatter.save()
+  File "/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/pandas/io/formats/csvs.py", line 241, in save
+    with get_handle(
+  File "/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/pandas/io/common.py", line 697, in get_handle
+    check_parent_directory(str(handle))
+  File "/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/pandas/io/common.py", line 571, in check_parent_directory
+    raise OSError(fr"Cannot save file into a non-existent directory: '{parent}'")
+OSError: Cannot save file into a non-existent directory: '/home/gridsan/nhulkund/OpenOOD/home/gridsan/nhulkund/OpenOOD/results/hparam/image_size: 32
+interpolation: bilinear
+name: cifar10
+normalization_type: cifar10
+num_classes: 10
+num_gpus: 1
+num_machines: 1
+num_workers: 8
+pre_size: 32
+split_names: ['train', 'val', 'test']
+test:
+    batch_size: 200
+    data_dir: ./data/images_classic/
+    dataset_class: ImglistDataset
+    imglist_pth: ./data/benchmark_imglist/cifar10/test_cifar10.txt
+    shuffle: False
+train:
+    batch_size: 128
+    data_dir: ./data/images_classic/
+    dataset_class: ImglistDataset
+    imglist_pth: ./data/benchmark_imglist/cifar10/train_cifar10.txt
+    shuffle: True
+val:
+    batch_size: 200
+    data_dir: ./data/images_classic/
+    dataset_class: ImglistDataset
+    imglist_pth: ./data/benchmark_imglist/cifar10'

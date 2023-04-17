@@ -6,6 +6,8 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from .base_postprocessor import BasePostprocessor
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
+
 
 normalizer = lambda x: x / np.linalg.norm(x, axis=-1, keepdims=True) + 1e-10
 
@@ -49,13 +51,18 @@ class DICEPostprocessor(BasePostprocessor):
         self.masked_w = w * mask
 
     @torch.no_grad()
-    def postprocess(self, net: nn.Module, data: Any):
+    def postprocess(self, net: nn.Module, data: Any, augmentation):
         if self.masked_w is None:
             self.calculate_mask(net.fc.weight)
         _, feature = net(data, return_feature=True)
         vote = feature[:, None, :] * self.masked_w
         output = vote.sum(2) + net.fc.bias
-        _, pred = torch.max(torch.softmax(output, dim=1), dim=1)
+        logits = torch.softmax(output, dim=1)
+        if self.config.rand_augment.augmentation and augmentation:
+            _, pred = postprocess_augmentations(self.config, logits)
+        else:
+            _, pred = torch.max(logits, dim=1)
+        # _, pred = torch.max(logits, dim=1)
         energyconf = torch.logsumexp(output.data.cpu(), dim=1)
         return pred, energyconf
 

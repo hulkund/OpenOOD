@@ -29,9 +29,6 @@ from .residual_postprocessor import ResidualPostprocessor
 from .ssd_postprocessor import SSDPostprocessor
 from .temp_scaling_postprocessor import TemperatureScalingPostprocessor
 from .vim_postprocessor import VIMPostprocessor
-from torchvision.transforms import RandAugment
-import torch
-from torch import Tensor
 
 def get_postprocessor(config: Config):
     postprocessors = {
@@ -68,31 +65,4 @@ def get_postprocessor(config: Config):
 
     return postprocessors[config.postprocessor.name](config)
 
-class RandAugmentManifold(object):
-    def __init__(self, rand_n, rand_m):
-        self.n = rand_n
-        self.m = rand_m
 
-    def preprocess(self, data, data_max, data_min):
-        data = (data - data_min) / (data_max - data_min) # normalize the data to 0 - 1
-        data = 255 * data # Now scale by 255
-        data = data.type(torch.uint8)
-        return data
-
-    def postprocess(self, data, data_max, data_min):
-        data = data.type(torch.float32)
-        data /= 255
-        data = (data * (data_max - data_min)) + data_min
-        return data
-
-    def augment_preprocess(self, im):
-        rand_aug = RandAugment(num_ops=self.n, magnitude=self.m)
-        data_max, data_min = im.clone().max(), im.clone().min()
-        pre_im = self.preprocess(im, data_max, data_min)
-        aug_im = rand_aug(pre_im)
-        post_im = self.postprocess(aug_im, data_max, data_min)
-        return post_im
-    
-    def __call__(self, img: Tensor) -> Tensor:
-        img = self.augment_preprocess(img)
-        return img 

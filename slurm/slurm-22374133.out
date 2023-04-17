@@ -1,0 +1,26 @@
+#!/bin/bash
+got config
+got data
+Model Loading resnet18_32x32 Completed!
+got network
+got evaluator, postprocessor
+/state/partition1/llgrid/pkg/anaconda/anaconda3-2022a/lib/python3.8/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: libtorch_cuda_cu.so: cannot open shared object file: No such file or directory
+  warn(f"Failed to load image Python extension: {e}")
+/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/mmcv/cnn/bricks/transformer.py:32: UserWarning: Fail to import ``MultiScaleDeformableAttention`` from ``mmcv.ops.multi_scale_deform_attn``, You should install ``mmcv-full`` if you need this module. 
+  warnings.warn('Fail to import ``MultiScaleDeformableAttention`` from '
+Traceback (most recent call last):
+  File "get_ood_metrics.py", line 79, in <module>
+    acc_metrics, ood_metrics = run_metrics(config_exp)
+  File "get_ood_metrics.py", line 70, in run_metrics
+    acc_metrics = evaluator.eval_acc(net, id_loader_dict['test'], postprocessor)
+  File "/home/gridsan/nhulkund/OpenOOD/openood/evaluators/ood_evaluator.py", line 161, in eval_acc
+    self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(net, data_loader)
+  File "/home/gridsan/nhulkund/OpenOOD/openood/postprocessors/base_postprocessor.py", line 48, in inference
+    pred, conf = self.postprocess(net, data, augmentation)
+  File "/home/gridsan/nhulkund/.local/lib/python3.8/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gridsan/nhulkund/OpenOOD/openood/postprocessors/base_postprocessor.py", line 21, in postprocess
+    conf, pred = postprocess_augmentations(self.config, output)
+  File "/home/gridsan/nhulkund/OpenOOD/openood/postprocessors/randaugment_manifold_function.py", line 42, in postprocess_augmentations
+    raise TypeError
+TypeError

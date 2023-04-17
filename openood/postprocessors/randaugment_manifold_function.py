@@ -33,21 +33,18 @@ class RandAugmentManifold(object):
         return img 
 
 def postprocess_augmentations(config, output):
-    #print("initial output size", output.shape)
     output=output.cpu()
     num_imgs = config.rand_augment.num_augments+1
+    #print(output.shape)
     if output.shape[0] % num_imgs == 0: 
         first_dim = int(output.shape[0]/num_imgs)
         second_dim = num_imgs
     else:
         raise TypeError
     if config.rand_augment.averaging_before_max == True:
-        output_reshaped = torch.reshape(output, (first_dim, second_dim, output.shape[1]))
-        #print("output after reshaping", output_reshaped.shape)
-        output_averaged = torch.Tensor(torch.mean(output_reshaped,dim=1))
-        #print("output after averaging", output_averaged.shape)
+        output_reshaped = output.numpy().reshape((first_dim, second_dim, output.shape[1]))
+        output_averaged = torch.Tensor(np.mean(output_reshaped,axis=1))
         conf, pred = torch.max(output_averaged, dim=1)
-        #print("output maxed", pred.shape)
     else:
         conf, pred = torch.max(output, dim=1)
         pred_reshaped = pred.numpy().reshape(first_dim,second_dim)
