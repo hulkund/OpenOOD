@@ -84,7 +84,7 @@ if __name__ == "__main__":
     ood_df = pd.DataFrame(ood_metrics, index=[0])
     acc_df = pd.DataFrame(acc_metrics, index=[0])
     filename = PATH+'results/hparam/'+exp_name
-    ood_df.to_csv(PATH+filename)
+    ood_df.to_csv(filename)
 
 # def save_metrics(config, ood_metrics):
 #     save_dir = os.path.join(config.output_dir, 'scores')

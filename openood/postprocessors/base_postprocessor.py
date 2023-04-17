@@ -32,7 +32,6 @@ class BasePostprocessor:
             if self.config.rand_augment.augmentation == True and augmentation:
                 #print("rand aug")
                 aug_data = []
-                aug_label = []
                 #print("augmenting")
                 rand_aug=RandAugmentManifold(self.config.rand_augment.rand_n, self.config.rand_augment.rand_m)
                 for k in range(data.shape[0]):
@@ -42,11 +41,9 @@ class BasePostprocessor:
                         aug_img=rand_aug(orig_img.cpu())
                         aug_img=torch.Tensor(aug_img)
                         aug_data.append(aug_img)
-                        aug_label.append(label[k])
                 aug_data=torch.stack(aug_data).cuda()
                 #print("done augmenting")
                 data = aug_data
-                #label = aug_label
 
             pred, conf = self.postprocess(net, data, augmentation)
 
