@@ -12,7 +12,6 @@ from .base_dataset import BaseDataset
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 PATH="/home/gridsan/nhulkund/OpenOOD/"
-
 class Convert:
     def __init__(self, mode='RGB'):
         self.mode = mode
@@ -38,6 +37,8 @@ class ImglistDataset(BaseDataset):
         self.name = name
         with open(imglist_pth) as imgfile:
             self.imglist = imgfile.readlines()
+        if data_dir=="IMAGENET_PATH":
+            data_dir = os.environ.get('IMAGENET_PATH')
         self.data_dir = data_dir
         self.num_classes = num_classes
         self.preprocessor = preprocessor

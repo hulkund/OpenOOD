@@ -15,7 +15,7 @@ dataset:
 
   train:
     dataset_class: ImglistDataset
-    data_dir: ./data/images_largescale/
+    data_dir: IMAGENET_PATH
     imglist_pth: ./data/benchmark_imglist/imagenet/train_imagenet.txt
     batch_size: 32
     shuffle: True

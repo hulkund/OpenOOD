@@ -52,11 +52,18 @@ class DICEPostprocessor(BasePostprocessor):
 
     @torch.no_grad()
     def postprocess(self, net: nn.Module, data: Any, augmentation):
+        data_for_mask = []
+        for i in range(0,data.shape[0],11):
+            data_for_mask.append(data[i].cpu())
+        data_for_mask=torch.stack(data_for_mask).cuda()
+
         if self.masked_w is None:
             self.calculate_mask(net.fc.weight)
+
         _, feature = net(data, return_feature=True)
         vote = feature[:, None, :] * self.masked_w
         output = vote.sum(2) + net.fc.bias
+
         logits = torch.softmax(output, dim=1)
         if self.config.rand_augment.augmentation and augmentation:
             _, pred = postprocess_augmentations(self.config, logits)

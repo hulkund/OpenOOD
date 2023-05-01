@@ -1,9 +1,9 @@
 rand_augment:
-  name: base
+  name: avg_min
   augmentation: True
   rand_n: 1
   rand_m: 5
   num_augments: 10
+  min: True
   averaging_before_max: True
   per_gradient_odin: True
-  min: False

@@ -10,8 +10,7 @@ import os
 import numpy as np
 import argparse
 from openood.utils import config as cfg
-# from torch.utils.tensorboard import SummaryWriter
-# from torchvision import datasets, transforms
+# import wandb
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset')
@@ -23,10 +22,11 @@ args = parser.parse_args()
 
 
 PATH="/home/gridsan/nhulkund/OpenOOD/"
-# writer = SummaryWriter()
+# os.environ["WANDB_API_KEY"] = '1f4ff21771cbc719b4707004bf9391c352465c4f'
+# os.environ["WANDB_MODE"] = "offline"
 
 def fill_config_files(dataset, ood_metric, rand_augment):
-    networks = {'cifar100':'./configs/networks/resnet18_32x32.yml', 'cifar10':'./configs/networks/resnet18_32x32.yml', 'imagenet':'/scripts/download/results/checkpoints/imagenet_res50_acc76.10.pth'}
+    networks = {'cifar100':'./configs/networks/resnet18_32x32.yml', 'cifar10':'./configs/networks/resnet18_32x32.yml', 'imagenet':'./configs/networks/resnet50.yml'}
     config_files = [
         './configs/datasets/{}/{}.yml'.format(dataset, dataset),
         './configs/datasets/{}/{}_ood.yml'.format(dataset, dataset),
@@ -54,7 +54,7 @@ def get_config():
     elif args.dataset == 'imagenet':
         config.network.checkpoint = PATH+'/scripts/download/results/checkpoints/imagenet_res50_acc76.10.pth'
     return config
-    
+
 def run_metrics(config):
     # get dataloader
     id_loader_dict = get_dataloader(config)
@@ -66,6 +66,7 @@ def run_metrics(config):
     # init ood evaluator
     evaluator = get_evaluator(config)
     postprocessor = get_postprocessor(config)
+    postprocessor.setup(net, id_loader_dict, ood_loader_dict)
     print("got evaluator, postprocessor")
     acc_metrics = evaluator.eval_acc(net, id_loader_dict['test'], postprocessor)
     print("acc metric")
@@ -75,16 +76,32 @@ def run_metrics(config):
 
 if __name__ == "__main__":
     config_exp = get_config()
+    # wandb.init(
+    #     # set the wandb project where this run will be logged
+    #     project="hparam-search-msp",
+        
+    #     # track hyperparameters and run metadata
+    #     config={
+    #     "rand_n": config_exp.rand_augment.rand_n,
+    #     "rand_m": config_exp.rand_augment.rand_m,
+    #     "dataset": config_exp.dataset.name,
+    #     "ood_metric": config_exp.postprocessor.name,
+    #     "rand_augment":config_exp.rand_augment.name,
+    #     }, 
+        
+    #     settings=wandb.Settings(start_method="fork")
+    # )
     print("got config")
+    print(args.dataset, args.ood_metric, args.rand_augment, "rand_n=", args.rand_n, " rand_m=", args.rand_m)
     acc_metrics, ood_metrics = run_metrics(config_exp)
     exp_name = '{}_{}_m={}_n={}_{}'.format(config_exp.dataset.name, config_exp.postprocessor.name, config_exp.rand_augment.rand_n, config_exp.rand_augment.rand_m, config_exp.rand_augment.name)
     print("ran metrics")
-    print(args.dataset, args.ood_metric, args.rand_augment, "rand_n=", args.rand_n, " rand_m=", args.rand_m)
-    # writer.add_scalar('OOD metric', ood_metrics[1], exp_name)
-    ood_df = pd.DataFrame(ood_metrics, index=[0])
-    acc_df = pd.DataFrame(acc_metrics, index=[0])
-    filename = PATH+'results/hparam/'+exp_name
-    ood_df.to_csv(filename)
+    print(ood_metrics)
+    # ood_df = pd.DataFrame(ood_metrics)
+    # # wandb.log({"auroc": ood_metrics[1], "fpr": ood_metrics[0]})
+    # acc_df = pd.DataFrame(acc_metrics)
+    # filename = PATH+'results/hparam/'+exp_name
+    # ood_df.to_csv(filename)
 
 # def save_metrics(config, ood_metrics):
 #     save_dir = os.path.join(config.output_dir, 'scores')

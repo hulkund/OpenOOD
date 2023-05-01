@@ -9,6 +9,7 @@ from sklearn.covariance import EmpiricalCovariance
 from tqdm import tqdm
 
 from .base_postprocessor import BasePostprocessor
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
 
 
 class VIMPostprocessor(BasePostprocessor):
@@ -62,7 +63,7 @@ class VIMPostprocessor(BasePostprocessor):
                                axis=-1)
         self.alpha = logit_id_train.max(
             axis=-1).mean() / vlogit_id_train.mean()
-        print(f'{self.alpha=:.4f}')
+        print(f'{self.alpha :.4f}')
 
         vlogit_id_val = norm(np.matmul(feature_id_val - self.u, self.NS),
                              axis=-1) * self.alpha
@@ -70,11 +71,14 @@ class VIMPostprocessor(BasePostprocessor):
         self.score_id = -vlogit_id_val + energy_id_val
 
     @torch.no_grad()
-    def postprocess(self, net: nn.Module, data: Any):
+    def postprocess(self, net: nn.Module, data: Any, augmentation):
         _, feature_ood = net.forward(data, return_feature=True)
         feature_ood = feature_ood.cpu()
         logit_ood = feature_ood @ self.w.T + self.b
-        _, pred = torch.max(logit_ood, dim=1)
+        if self.config.rand_augment.augmentation and augmentation:
+            _, pred = postprocess_augmentations(self.config, logit_ood)
+        else:
+            _, pred = torch.max(logit_ood, dim=1)
         energy_ood = logsumexp(logit_ood.numpy(), axis=-1)
         vlogit_ood = norm(np.matmul(feature_ood.numpy() - self.u, self.NS),
                           axis=-1) * self.alpha

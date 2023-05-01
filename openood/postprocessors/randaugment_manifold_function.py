@@ -32,6 +32,7 @@ class RandAugmentManifold(object):
         img = self.augment_preprocess(img)
         return img 
 
+
 def postprocess_augmentations(config, output):
     output=output.cpu()
     num_imgs = config.rand_augment.num_augments+1
@@ -53,3 +54,56 @@ def postprocess_augmentations(config, output):
         conf_averaged = torch.Tensor(np.mean(conf_reshaped,axis=1))
         conf, pred = conf_averaged, pred_averaged
     return conf, pred
+
+def postprocess_augmentations_min(config, output):
+    output=output.cpu()
+    num_imgs = config.rand_augment.num_augments+1
+    #print(output.shape)
+    if output.shape[0] % num_imgs == 0: 
+        first_dim = int(output.shape[0]/num_imgs)
+        second_dim = num_imgs
+    else:
+        raise TypeError
+    if config.rand_augment.averaging_before_max == True:
+        output_reshaped = output.numpy().reshape((first_dim, second_dim, output.shape[1]))
+        output_averaged = torch.Tensor(np.min(output_reshaped, axis=1))
+        conf, pred = torch.max(output_averaged, dim=1)
+    else:
+        conf, pred = torch.max(output, dim=1)
+        pred_reshaped = pred.numpy().reshape(first_dim, second_dim)
+        pred_averaged = torch.Tensor(np.min(pred_reshaped, axis=1))
+        conf_reshaped = conf.numpy().reshape(first_dim, second_dim)
+        conf_averaged = torch.Tensor(np.min(conf_reshaped, axis=1))
+        conf, pred = conf_averaged, pred_averaged
+    return conf, pred
+
+
+def postprocess_aug_gradnorm(config, output):
+    #output=output.cpu()
+    num_imgs = config.rand_augment.num_augments+1
+    #print(output.shape)
+    if output.shape[0] % num_imgs == 0: 
+        first_dim = int(output.shape[0]/num_imgs)
+        second_dim = num_imgs
+    else:
+        raise TypeError
+    if config.rand_augment.averaging_before_max == True:
+        output_reshaped = output.numpy().reshape((first_dim, second_dim, output.shape[1]))
+        output_averaged = np.mean(output_reshaped,axis=1)
+        preds = np.argmax(output_averaged, axis=1)
+    else:
+        preds = np.argmax(output, axis=1)
+        pred_reshaped = preds.numpy().reshape(first_dim,second_dim)
+        preds = np.mean(pred_reshaped,axis=1)
+    return preds
+
+
+def postprocess_average(config, output):
+    num_imgs = config.rand_augment.num_augments+1
+    if output.shape[0] % num_imgs == 0:
+        first_dim = int(output.shape[0]/num_imgs)
+        second_dim = num_imgs
+    output_reshaped = output.numpy().reshape((first_dim, second_dim, output.shape[1]))
+    output = np.mean(output_reshaped,axis=1)
+    return output
+

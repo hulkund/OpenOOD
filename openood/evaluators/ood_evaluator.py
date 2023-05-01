@@ -38,8 +38,7 @@ class OODEvaluator(BaseEvaluator):
             'id_data_loaders should have the key: test!'
         dataset_name = self.config.dataset.name
         print(f'Performing inference on {dataset_name} dataset...', flush=True)
-        id_pred, id_conf, id_gt = postprocessor.inference(
-            net, id_data_loader['test'])
+        id_pred, id_conf, id_gt = postprocessor.inference(net, id_data_loader['test'], augmentation=self.config.rand_augment.augmentation)
         if self.config.recorder.save_scores:
             self._save_scores(id_pred, id_conf, id_gt, dataset_name)
 
@@ -84,6 +83,8 @@ class OODEvaluator(BaseEvaluator):
             ood_metrics = compute_all_metrics(conf, label, pred)
             if self.config.recorder.save_csv:
                 self._save_csv(ood_metrics, dataset_name=dataset_name)
+                self._save_randaug_csv(ood_metrics, dataset_name=dataset_name)
+
             metrics_list.append(ood_metrics)
 
         print('Computing mean metrics...', flush=True)
@@ -91,7 +92,8 @@ class OODEvaluator(BaseEvaluator):
         metrics_mean = np.mean(metrics_list, axis=0)
         if self.config.recorder.save_csv:
             self._save_csv(metrics_mean, dataset_name=ood_split)
-
+            self._save_randaug_csv(metrics_mean, dataset_name=ood_split, mean=True)
+            
     def _save_csv(self, metrics, dataset_name):
         [fpr, auroc, aupr_in, aupr_out,
          ccr_4, ccr_3, ccr_2, ccr_1, accuracy] \
@@ -127,6 +129,58 @@ class OODEvaluator(BaseEvaluator):
         print(u'\u2500' * 70, flush=True)
 
         csv_path = os.path.join(self.config.output_dir, 'ood.csv')
+        if not os.path.exists(csv_path):
+            with open(csv_path, 'w', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerow(write_content)
+        else:
+            with open(csv_path, 'a', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writerow(write_content)
+    
+    def _save_randaug_csv(self, metrics, dataset_name, mean=False):
+        [fpr, auroc, aupr_in, aupr_out,
+         ccr_4, ccr_3, ccr_2, ccr_1, accuracy] \
+         = metrics
+
+        write_content = {
+            'dataset': dataset_name,
+            'metric': self.config.postprocessor.name,
+            'rand_augment': self.config.rand_augment.name, 
+            'rand_n': self.config.rand_augment.rand_n,
+            'rand_m': self.config.rand_augment.rand_m, 
+            'FPR@95': '{:.2f}'.format(100 * fpr),
+            'AUROC': '{:.2f}'.format(100 * auroc),
+            'AUPR_IN': '{:.2f}'.format(100 * aupr_in),
+            'AUPR_OUT': '{:.2f}'.format(100 * aupr_out),
+            'CCR_4': '{:.2f}'.format(100 * ccr_4),
+            'CCR_3': '{:.2f}'.format(100 * ccr_3),
+            'CCR_2': '{:.2f}'.format(100 * ccr_2),
+            'CCR_1': '{:.2f}'.format(100 * ccr_1),
+            'ACC': '{:.2f}'.format(100 * accuracy)
+        }
+
+        fieldnames = list(write_content.keys())
+
+        # print ood metric results
+        print('FPR@95: {:.2f}, AUROC: {:.2f}'.format(100 * fpr, 100 * auroc),
+              end=' ',
+              flush=True)
+        print('AUPR_IN: {:.2f}, AUPR_OUT: {:.2f}'.format(
+            100 * aupr_in, 100 * aupr_out),
+              flush=True)
+        print('CCR: {:.2f}, {:.2f}, {:.2f}, {:.2f},'.format(
+            ccr_4 * 100, ccr_3 * 100, ccr_2 * 100, ccr_1 * 100),
+              end=' ',
+              flush=True)
+        print('ACC: {:.2f}'.format(accuracy * 100), flush=True)
+        print(u'\u2500' * 70, flush=True)
+
+        if mean:
+            csv_path = os.path.join("/home/gridsan/nhulkund/OpenOOD/results/hparam", self.config.dataset.name+"_"+dataset_name+'_ood.csv')
+        else:
+            csv_path = os.path.join("/home/gridsan/nhulkund/OpenOOD/results/hparam", self.config.dataset.name+'_ood.csv')
         if not os.path.exists(csv_path):
             with open(csv_path, 'w', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -191,8 +245,7 @@ class OODEvaluator(BaseEvaluator):
             postprocessor.set_hyperparam(hyperparam)
             [id_pred, id_conf, id_gt] = id_list
 
-            ood_pred, ood_conf, ood_gt = postprocessor.inference(
-                net, val_data_loader)
+            ood_pred, ood_conf, ood_gt = postprocessor.inference(net, val_data_loader)
             ood_gt = -1 * np.ones_like(ood_gt)  # hard set to -1 as ood
             pred = np.concatenate([id_pred, ood_pred])
             conf = np.concatenate([id_conf, ood_conf])

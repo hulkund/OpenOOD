@@ -7,6 +7,8 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from .base_postprocessor import BasePostprocessor
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
+
 
 normalizer = lambda x: x / np.linalg.norm(x, axis=-1, keepdims=True) + 1e-10
 
@@ -45,7 +47,7 @@ class KNNPostprocessor(BasePostprocessor):
         self.index.add(self.activation_log)
 
     @torch.no_grad()
-    def postprocess(self, net: nn.Module, data: Any):
+    def postprocess(self, net: nn.Module, data: Any, augmentation):
         output, feature = net(data, return_feature=True)
         feature_normed = normalizer(feature.data.cpu().numpy())
         D, _ = self.index.search(
@@ -53,7 +55,11 @@ class KNNPostprocessor(BasePostprocessor):
             self.K,
         )
         kth_dist = -D[:, -1]
-        _, pred = torch.max(torch.softmax(output, dim=1), dim=1)
+        logits = torch.softmax(output, dim=1)
+        if self.config.rand_augment.augmentation and augmentation:
+            _, pred = postprocess_augmentations(self.config, logits)
+        else:
+            _, pred = torch.max(logits, dim=1)
         return pred, torch.from_numpy(kth_dist)
 
     def set_hyperparam(self, hyperparam: list):

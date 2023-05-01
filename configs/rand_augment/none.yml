@@ -1,3 +1,4 @@
 rand_augment:
   name: none
   augmentation: False
+  per_gradient_odin: False

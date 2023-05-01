@@ -6,6 +6,8 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from .base_postprocessor import BasePostprocessor
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
+
 
 
 class GradNormPostprocessor(BasePostprocessor):
@@ -57,12 +59,16 @@ class GradNormPostprocessor(BasePostprocessor):
         self.score_id = self.gradnorm(feature_id_val, self.w, self.b)
 
     @torch.no_grad()
-    def postprocess(self, net: nn.Module, data: Any):
+    def postprocess(self, net: nn.Module, data: Any, augmentation):
         _, feature_ood = net.forward(data, return_feature=True)
         with torch.enable_grad():
             score_ood = self.gradnorm(feature_ood.cpu().numpy(), self.w,
                                       self.b)
         with torch.no_grad():
             logit_ood = feature_ood.cpu() @ self.w.T + self.b
+            if self.config.rand_augment.augmentation and augmentation:
+                _, pred = postprocess_augmentations(self.config, logit_ood)
+            else:
+                _, pred = torch.max(logit_ood, dim=1)
             _, pred = torch.max(logit_ood, dim=1)
         return pred, torch.from_numpy(score_ood)

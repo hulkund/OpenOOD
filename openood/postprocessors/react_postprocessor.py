@@ -6,6 +6,8 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from .base_postprocessor import BasePostprocessor
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
+
 
 
 class ReactPostprocessor(BasePostprocessor):
@@ -42,10 +44,14 @@ class ReactPostprocessor(BasePostprocessor):
             self.percentile, self.threshold))
 
     @torch.no_grad()
-    def postprocess(self, net: nn.Module, data: Any):
+    def postprocess(self, net: nn.Module, data: Any, augmentation):
         output = net.forward_threshold(data, self.threshold)
         score = torch.softmax(output, dim=1)
-        _, pred = torch.max(score, dim=1)
+        if self.config.rand_augment.augmentation and augmentation:
+            _, pred = postprocess_augmentations(self.config, score)
+        else:
+            _, pred = torch.max(score, dim=1)
+        #_, pred = torch.max(score, dim=1)
         energyconf = torch.logsumexp(output.data.cpu(), dim=1)
         return pred, energyconf
 

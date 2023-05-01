@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations
+from .randaugment_manifold_function import RandAugmentManifold, postprocess_augmentations, postprocess_augmentations_min
 
 class BasePostprocessor:
     def __init__(self, config):
@@ -16,9 +16,15 @@ class BasePostprocessor:
     @torch.no_grad()
     def postprocess(self, net: nn.Module, data: Any, augmentation=False):
         output = net(data)
+        filename = 'results/final/msp_{}_{}_logits'.format(self.config.rand_augment.averaging_before_max,self.config.dataset.name)
+        with open(filename, 'ab') as f:
+            np.save(f, output.cpu().numpy())
         score = torch.softmax(output, dim=1)
         if self.config.rand_augment.augmentation and augmentation:
-            conf, pred = postprocess_augmentations(self.config, score)
+            if self.config.rand_augment.min:
+                conf, pred = postprocess_augmentations_min(self.config, score)
+            else:
+                conf, pred = postprocess_augmentations(self.config, score)
         else:
             conf, pred = torch.max(score, dim=1)
         return pred, conf

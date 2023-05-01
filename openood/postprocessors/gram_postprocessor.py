@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from .base_postprocessor import BasePostprocessor
+from .randaugment_manifold_function import postprocess_aug_gradnorm
 
 
 class GRAMPostprocessor(BasePostprocessor):
@@ -26,10 +27,10 @@ class GRAMPostprocessor(BasePostprocessor):
         self.feature_min, self.feature_max = sample_estimator(
             net, id_loader_dict['train'], self.num_classes, self.powers)
 
-    def postprocess(self, net: nn.Module, data: Any):
+    def postprocess(self, net: nn.Module, data: Any, augmentation):
         preds, deviations = get_deviations(net, data, self.feature_min,
                                            self.feature_max, self.num_classes,
-                                           self.powers)
+                                           self.powers, augmentation, self.config)
         return preds, deviations
 
     def set_hyperparam(self, hyperparam: list):
@@ -107,7 +108,7 @@ def sample_estimator(model, train_loader, num_classes, powers):
     return mins, maxs
 
 
-def get_deviations(model, data, mins, maxs, num_classes, powers):
+def get_deviations(model, data, mins, maxs, num_classes, powers, augmentation, config):
     model.eval()
 
     num_layer = 5  # 4 for lenet
@@ -118,8 +119,12 @@ def get_deviations(model, data, mins, maxs, num_classes, powers):
 
     # get predictions
     logits, feature_list = model(data, return_feature_list=True)
-    confs = F.softmax(logits, dim=1).cpu().detach().numpy()
-    preds = np.argmax(confs, axis=1)
+    confs = F.softmax(logits, dim=1).cpu().detach()
+    if config.rand_augment.augmentation and augmentation:
+        preds = postprocess_aug_gradnorm(config, confs)
+    else:
+        confs=confs.numpy()
+        preds = np.argmax(confs, axis=1)
     predsList = preds.tolist()
     preds = torch.tensor(preds)
 
